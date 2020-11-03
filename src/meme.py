@@ -2,6 +2,19 @@ import pandas as pd
 import numpy as np
 import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--str_input", action="store_true", help = "indicates string inputs for comparison")
+parser.add_argument("--file-input", action="store_true", help="indicates file inputs for comparison")
+args = parser.parse_args()
+
+
+if args.file:
+    None
+
+if args.str_input:
+    None
+
+
 
 def makeCountMatrix():
     return None
