@@ -72,8 +72,9 @@ def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
     pseudo_matrix = np.stack((pseudo_vec_a, pseudo_vec_c, pseudo_vec_g, pseudo_vec_t))
     return count_matrix + pseudo_matrix
 
-def makeFrequencyMatrix():
-    return None
+def makeFrequencyMatrix(count_matrix):
+    norm_a, norm_c, norm_g, norm_t = np.sum(count_matrix, axis=1)
+    return np.stack((count_matrix[0]/norm_a, count_matrix[1]/norm_c, count_matrix[2]/norm_g, count_matrix[3]/norm_t))
 
 def entropy():
     return None
