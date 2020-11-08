@@ -64,8 +64,12 @@ def makeCountMatrix(data_dict):
     return np.stack((vec_a, vec_c, vec_g, vec_t))
 
 
-def addPseudo(count_matrix, pseudo_count=1):
-    pseudo_matrix = np.zeros((4, MAXLEN)) + pseudo_count
+def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
+    pseudo_vec_a = np.zeros((MAXLEN)) + pseudo_count[0]
+    pseudo_vec_c = np.zeros((MAXLEN)) + pseudo_count[1]
+    pseudo_vec_g = np.zeros((MAXLEN)) + pseudo_count[2]
+    pseudo_vec_t = np.zeros((MAXLEN)) + pseudo_count[3]
+    pseudo_matrix = np.stack((pseudo_vec_a, pseudo_vec_c, pseudo_vec_g, pseudo_vec_t))
     return count_matrix + pseudo_matrix
 
 def makeFrequencyMatrix():
