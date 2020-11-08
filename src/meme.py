@@ -6,6 +6,8 @@ from collections import defaultdict
 parser = argparse.ArgumentParser()
 parser.add_argument("--str_input", action="store_true", help = "indicates string inputs for comparison")
 parser.add_argument("--file-input", action="store_true", help="indicates file inputs for comparison")
+parser.add_argument("--trainf", action="store_true", help="input train file name")
+parser.add_argument("--testf", action="store_true", help="input test file name")
 args = parser.parse_args()
 
 def read_data(filename):
@@ -26,6 +28,8 @@ def read_data(filename):
 
 
 if args.file:
+    Dtrain = read_data(args.trainf)
+    Dtest = read_data(args.testf)
     None
 
 if args.str_input:
