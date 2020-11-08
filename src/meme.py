@@ -41,27 +41,27 @@ def read_data(filename):
 
 def makeCountMatrix(data_dict):
     vec_a = np.zeros(MAXLEN)
-    vec_t = np.zeros(MAXLEN)
     vec_c = np.zeros(MAXLEN)
     vec_g = np.zeros(MAXLEN)
+    vec_t = np.zeros(MAXLEN)
 
     for i in range(MAXLEN):
-        a, t, c, g = 0, 0, 0, 0
+        a, c, g, t = 0, 0, 0, 0
         for seq in data_dict.values():
             try:
                 if seq[i] == "A":
                     a += 1
-                if seq[i] == "T":
-                    t += 1
                 if seq[i] == "C":
                     c += 1
                 if seq[i] == "G":
                     g += 1
+                if seq[i] == "T":
+                    t += 1
             except:
                 pass
-            vec_a[i], vec_t[i], vec_c[i], vec_g[i] = a, t, c, g
+            vec_a[i], vec_c[i], vec_g[i], vec_t[i] = a, c, g, t
 
-    return np.stack((vec_a, vec_t, vec_c, vec_g))
+    return np.stack((vec_a, vec_c, vec_g, vec_t))
 
 
 def addPseudo(count_matrix, pseudo_count=1):
