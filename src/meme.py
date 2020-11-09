@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import argparse
 from collections import defaultdict
+from math import log2
 
 #parser = argparse.ArgumentParser()
 #parser.add_argument("--str_input", action="store_true", help = "indicates string inputs for comparison")
@@ -79,8 +80,10 @@ def makeFrequencyMatrix(count_matrix):
 def entropy():
     return None
 
-def makeWMM():
-    return None
+def makeWMM(frequency_matrix, background_vec = (0.25, 0.25, 0.25, 0.25)):
+    bg_a, bg_c, bg_g, bg_t = background_vec
+    freq_a, freq_c, freq_g, freq_t = frequency_matrix[0], frequency_matrix[1], frequency_matrix[2], frequency_matrix[3]
+    return np.stack((log2(freq_a/bg_a), log2(freq_c/bg_c), log2(freq_g/bg_g), log2(freq_t/bg_t)))
 
 def scanWMM():
     return None
