@@ -11,7 +11,12 @@ from collections import defaultdict
 #parser.add_argument("--testf", action="store_true", help="input test file name")
 #args = parser.parse_args()
 
-MAXLEN = 113
+MAXLEN = 113 # maximum length of a sequence
+k = 10 # Motif width
+IND_TO_NUC = dict( zip( range(4), ['A','C','G','T'] ) )
+NUC_TO_IND = dict( zip( ['A','C','G','T'], range(4) ) )
+def convert_nuc_to_ind(segment):
+    return [NUC_TO_IND[x] for x in segment]
 
 def read_data(filename):
     """
@@ -40,7 +45,11 @@ def read_data(filename):
 
 
 
-def makeCountMatrix(data_dict):
+def makeCountMatrix(seq):
+    """
+    given a sequence, i.e. [a,t,c,g,a,a,t ... ]
+    make a count matrix
+    """
     vec_a = np.zeros(MAXLEN)
     vec_c = np.zeros(MAXLEN)
     vec_g = np.zeros(MAXLEN)
@@ -48,24 +57,23 @@ def makeCountMatrix(data_dict):
 
     for i in range(MAXLEN):
         a, c, g, t = 0, 0, 0, 0
-        for seq in data_dict.values():
-            try:
-                if seq[i] == "A":
-                    a += 1
-                if seq[i] == "C":
-                    c += 1
-                if seq[i] == "G":
-                    g += 1
-                if seq[i] == "T":
-                    t += 1
-            except:
-                pass
-            vec_a[i], vec_c[i], vec_g[i], vec_t[i] = a, c, g, t
+        try:
+            if seq[i] == "A":
+                a += 1
+            if seq[i] == "C":
+                c += 1
+            if seq[i] == "G":
+                g += 1
+            if seq[i] == "T":
+                t += 1
+        except:
+            pass
+        vec_a[i], vec_c[i], vec_g[i], vec_t[i] = a, c, g, t
 
     return np.stack((vec_a, vec_c, vec_g, vec_t))
 
 
-def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
+def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):                                                                                                                                                                                                                                                          
     pseudo_vec_a = np.zeros((MAXLEN)) + pseudo_count[0]
     pseudo_vec_c = np.zeros((MAXLEN)) + pseudo_count[1]
     pseudo_vec_g = np.zeros((MAXLEN)) + pseudo_count[2]
@@ -88,8 +96,17 @@ def makeWMM(frequency_matrix, background_vec = (0.25, 0.25, 0.25, 0.25)):
 
     return np.stack(entropies)
 
-def scanWMM():
-    return None
+def scanWMM(seq, motif_wmm):
+    scores = []
+    for i in range(MAXLEN-k+1):
+        #print(seq[i:i+k])
+        segment = seq[i:i+k]
+        idxs = convert_nuc_to_ind(segment)
+        for j in idxs:
+            for n in range(i,i+k):
+                score = motif_wmm[j][n]
+        scores.append(score)
+    return scores
 
 def Estep():
     return None
