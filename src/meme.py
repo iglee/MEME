@@ -50,12 +50,13 @@ def makeCountMatrix(seq):
     given a sequence, i.e. [a,t,c,g,a,a,t ... ]
     make a count matrix
     """
-    vec_a = np.zeros(MAXLEN)
-    vec_c = np.zeros(MAXLEN)
-    vec_g = np.zeros(MAXLEN)
-    vec_t = np.zeros(MAXLEN)
+    l = len(seq)
+    vec_a = np.zeros(l)
+    vec_c = np.zeros(l)
+    vec_g = np.zeros(l)
+    vec_t = np.zeros(l)
 
-    for i in range(MAXLEN):
+    for i in range(l):
         a, c, g, t = 0, 0, 0, 0
         try:
             if seq[i] == "A":
