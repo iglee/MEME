@@ -108,10 +108,17 @@ def scanWMM(seq, motif_wmm):
             for n in range(i,i+k):
                 score = motif_wmm[j][n]
         scores.append(score)
-    return scores
+    return np.asarray(scores)
 
-def Estep():
-    return None
+def Estep(seq, motif_wmm):
+    """
+    Estep for **one sequence**
+    """
+    scores = scanWMM(seq, motif_wmm)
+    probs = 2**scores
+    N = probs.sum()
+    probs = probs/N
+    return probs
 
 def Mstep():
     return None
