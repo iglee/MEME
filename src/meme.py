@@ -75,7 +75,7 @@ def makeCountMatrix(seq):
 
 
 def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
-    l = count_matrix.shape()[2]                                                                                                                                                                                                                                                          
+    l = count_matrix.shape[1]                                                                                                                                                                                                                                                          
     pseudo_vec_a = np.zeros((l)) + pseudo_count[0]
     pseudo_vec_c = np.zeros((l)) + pseudo_count[1]
     pseudo_vec_g = np.zeros((l)) + pseudo_count[2]
@@ -105,7 +105,7 @@ def scanWMM(seq, motif_wmm):
         segment = seq[i:i+k]
         idxs = convert_nuc_to_ind(segment)
         for j in idxs:
-            for n in range(i,i+k):
+            for n in range(k):
                 score = motif_wmm[j][n]
         scores.append(score)
     return np.asarray(scores)
@@ -122,3 +122,6 @@ def Estep(seq, motif_wmm):
 
 def Mstep():
     return None
+
+#initialization step
+#substrings = [init_seq[i:i+k] for i in range(len(init_seq)-k+1)]
