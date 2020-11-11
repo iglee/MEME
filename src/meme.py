@@ -74,7 +74,8 @@ def makeCountMatrix(seq):
     return np.stack((vec_a, vec_c, vec_g, vec_t))
 
 
-def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):                                                                                                                                                                                                                                                          
+def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
+    l = count_matrix.shape()[2]                                                                                                                                                                                                                                                          
     pseudo_vec_a = np.zeros((MAXLEN)) + pseudo_count[0]
     pseudo_vec_c = np.zeros((MAXLEN)) + pseudo_count[1]
     pseudo_vec_g = np.zeros((MAXLEN)) + pseudo_count[2]
