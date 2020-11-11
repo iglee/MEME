@@ -76,10 +76,10 @@ def makeCountMatrix(seq):
 
 def addPseudo(count_matrix, pseudo_count=(1,1,1,1)):
     l = count_matrix.shape()[2]                                                                                                                                                                                                                                                          
-    pseudo_vec_a = np.zeros((MAXLEN)) + pseudo_count[0]
-    pseudo_vec_c = np.zeros((MAXLEN)) + pseudo_count[1]
-    pseudo_vec_g = np.zeros((MAXLEN)) + pseudo_count[2]
-    pseudo_vec_t = np.zeros((MAXLEN)) + pseudo_count[3]
+    pseudo_vec_a = np.zeros((l)) + pseudo_count[0]
+    pseudo_vec_c = np.zeros((l)) + pseudo_count[1]
+    pseudo_vec_g = np.zeros((l)) + pseudo_count[2]
+    pseudo_vec_t = np.zeros((l)) + pseudo_count[3]
     pseudo_matrix = np.stack((pseudo_vec_a, pseudo_vec_c, pseudo_vec_g, pseudo_vec_t))
     return count_matrix + pseudo_matrix
 
