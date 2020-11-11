@@ -99,9 +99,9 @@ def makeWMM(frequency_matrix, background_vec = (0.25, 0.25, 0.25, 0.25)):
     return np.stack(entropies)
 
 def scanWMM(seq, motif_wmm):
+    l = len(seq)
     scores = []
-    for i in range(MAXLEN-k+1):
-        #print(seq[i:i+k])
+    for i in range(l-k+1):
         segment = seq[i:i+k]
         idxs = convert_nuc_to_ind(segment)
         for j in idxs:
