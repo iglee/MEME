@@ -110,19 +110,19 @@ def scanWMM(seq, motif_wmm):
         scores.append(score)
     return np.asarray(scores)
 
-def Estep(seq, motif_wmm):
-    """
-    Estep for **one sequence**
-    """
-    scores = scanWMM(seq, motif_wmm)
-    probs = 2**scores
-    N = probs.sum()
-    probs = probs/N
-    return probs
+def Estep(seqs, motif_wmm):
+    Ys = []
+    for seq in seqs:
+        scores = scanWMM(seq, motif_wmm)
+        probs = 2**scores
+        N = probs.sum()
+        probs = probs/N
+        Ys.append(probs)
+    return np.asarray(Ys)
 
 def Mstep(seqs, Ys):
     final_matrix = np.zeros((4,10))
-    
+
     for seq, Y in zip(seqs,Ys):
         # make a Y weighted count matrix for each position
         substrings = [seq[i:i+k] for i in range(len(seq)-k+1)]
