@@ -120,8 +120,26 @@ def Estep(seq, motif_wmm):
     probs = probs/N
     return probs
 
-def Mstep():
-    return None
+def Mstep(seqs, Ys):
+    final_matrix = np.zeros((4,10))
+    
+    for seq, Y in zip(seqs,Ys):
+        # make a Y weighted count matrix for each position
+        substrings = [seq[i:i+k] for i in range(len(seq)-k+1)]
+        cnt_matrix = np.array([makeCountMatrix(x) for x in substrings])
+        Y_expanded = np.expand_dims(Y, axis=(1,2))
+        weighted_cnt = (cnt_matrix * Y_expanded).sum(axis=0)
+
+        # add pseudo count, with pseudo count 1
+        weighted_cnt_pseudo = addPseudo(weighted_cnt)
+
+        freq_matrix = makeFrequencyMatrix(weighted_cnt_pseudo)
+
+        # add new WMM estimate for one sequence to final estimate
+        final_matrix += makeWMM(freq_matrix)
+
+    return final_matrix
+
 
 #initialization step
 #substrings = [init_seq[i:i+k] for i in range(len(init_seq)-k+1)]
