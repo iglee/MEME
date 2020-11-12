@@ -87,14 +87,16 @@ def makeFrequencyMatrix(count_matrix):
     normalization = np.sum(count_matrix, axis=0)
     return count_matrix/normalization
 
-def entropy(signal_freq_vector, background_freq):
-    return log2(signal_freq_vector/background_freq)
+def entropy(wmm, freq_matrix):
+    return sum(sum(wmm*freq_matrix))
+
+
 
 def makeWMM(frequency_matrix, background_vec = (0.25, 0.25, 0.25, 0.25)):
     entropies = []
 
     for i in range(4):
-        entropies.append(entropy(frequency_matrix[i], background_vec[i]))
+        entropies.append(log2(frequency_matrix[i]/background_vec[i]))
 
     return np.stack(entropies)
 
@@ -142,4 +144,15 @@ def Mstep(seqs, Ys):
 
 
 #initialization step
-#substrings = [init_seq[i:i+k] for i in range(len(init_seq)-k+1)]
+init_seq = seqs[0] # first string is used for seeding the algorithm
+substrings = [init_seq[i:i+k] for i in range(0,len(init_seq)-k+1,k//2)]
+cnt_matrices = [makeCountMatrix(x) for x in substrings]
+cnt_matrices_pseudo = [addPseudo(x,(0.0625,0.0625,0.0625,0.0625)) for x in cnt_matrices]
+freq_matrices = [makeFrequencyMatrix(x) for x in cnt_matrices_pseudo]
+motif_wmms = [makeWMM(x) for x in freq_matrices]
+init_wmms = motif_wmms.copy()
+
+for t in range(3):
+    for i in range(len(motif_wmms)):
+        Ys = Estep(seqs, motif_wmms[i])
+        motif_wmms[i] = Mstep(seqs, Ys)
