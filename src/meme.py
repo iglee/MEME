@@ -4,19 +4,23 @@ from numpy import log2
 import argparse
 from collections import defaultdict
 
-#parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
 #parser.add_argument("--str_input", action="store_true", help = "indicates string inputs for comparison")
-#parser.add_argument("--file-input", action="store_true", help="indicates file inputs for comparison")
-#parser.add_argument("--trainf", action="store_true", help="input train file name")
-#parser.add_argument("--testf", action="store_true", help="input test file name")
-#args = parser.parse_args()
+parser.add_argument("--file-input", action="store_true", help="indicates file inputs for comparison")
+parser.add_argument("--trainf", action="store", help="input train file name")
+parser.add_argument("--testf", action="store", help="input test file name")
+args = parser.parse_args()
 
 MAXLEN = 113 # maximum length of a sequence
 k = 10 # Motif width
 IND_TO_NUC = dict( zip( range(4), ['A','C','G','T'] ) )
 NUC_TO_IND = dict( zip( ['A','C','G','T'], range(4) ) )
+
 def convert_nuc_to_ind(segment):
     return [NUC_TO_IND[x] for x in segment]
+
+def convert_ind_to_nuc(segment):
+    return [IND_TO_NUC[x] for x in segment]
 
 def read_data(filename):
     """
@@ -35,9 +39,9 @@ def read_data(filename):
     return d
 
 
-#if args.file:
-#    Dtrain = read_data(args.trainf)
-#    Dtest = read_data(args.testf)
+if args.file_input:
+    Dtrain = read_data(args.trainf)
+    Dtest = read_data(args.testf)
     
 
 #if args.str_input:
@@ -90,8 +94,6 @@ def makeFrequencyMatrix(count_matrix):
 def entropy(wmm, freq_matrix):
     return sum(sum(wmm*freq_matrix))
 
-
-
 def makeWMM(frequency_matrix, background_vec = (0.25, 0.25, 0.25, 0.25)):
     entropies = []
 
@@ -104,11 +106,11 @@ def scanWMM(seq, motif_wmm):
     l = len(seq)
     scores = []
     for i in range(l-k+1):
+        score = 0
         segment = seq[i:i+k]
         idxs = convert_nuc_to_ind(segment)
-        for j in idxs:
-            for n in range(k):
-                score = motif_wmm[j][n]
+        for i in range(k):
+            score += motif_wmm[idxs[i]][i]
         scores.append(score)
     return np.asarray(scores)
 
@@ -116,6 +118,7 @@ def Estep(seqs, motif_wmm):
     Ys = []
     for seq in seqs:
         scores = scanWMM(seq, motif_wmm)
+        
         probs = 2**scores
         N = probs.sum()
         probs = probs/N
@@ -144,6 +147,8 @@ def Mstep(seqs, Ys):
 
 
 #initialization step
+seqs = list(Dtrain.values())
+test_seqs = list(Dtest.values())
 init_seq = seqs[0] # first string is used for seeding the algorithm
 substrings = [init_seq[i:i+k] for i in range(0,len(init_seq)-k+1,k//2)]
 cnt_matrices = [makeCountMatrix(x) for x in substrings]
@@ -156,3 +161,37 @@ for t in range(3):
     for i in range(len(motif_wmms)):
         Ys = Estep(seqs, motif_wmms[i])
         motif_wmms[i] = Mstep(seqs, Ys)
+
+# get max, mid, med motif_wmms from 3 runs; A, B, C
+entropies = []
+for x,y in zip(motif_wmms, freq_matrices):
+    entropies.append((x*y).sum().sum())
+
+entropies = np.asarray(entropies)
+idx_sorted = entropies.argsort()[::-1]
+max_idx, mid_idx, min_idx = idx_sorted[0], idx_sorted[len(idx_sorted)//2], idx_sorted[-1]
+
+A, A_freq = motif_wmms[max_idx], freq_matrices[max_idx]
+B, B_freq = motif_wmms[mid_idx], freq_matrices[mid_idx]
+C, C_freq = motif_wmms[min_idx], freq_matrices[min_idx]
+#print(A)
+
+# proceed to 7 more runs
+for t in range(7):
+    for i in range(len(motif_wmms)):
+        Ys = Estep(seqs, motif_wmms[i])
+        motif_wmms[i] = Mstep(seqs, Ys)
+
+entropies = []
+for x,y in zip(motif_wmms, freq_matrices):
+    entropies.append((x*y).sum().sum())
+
+entropies = np.asarray(entropies)
+final_idx = entropies.argmax()
+
+D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
+#print(D)
+
+# scores:
+for x in test_seqs:
+    print(scanWMM(x, D).argmax())
