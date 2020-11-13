@@ -3,13 +3,13 @@ import numpy as np
 from numpy import log2
 import argparse
 from collections import defaultdict
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve, auc
+import pickle as pkl
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-tr", "--trainf", action="store", help="input train file name")
 parser.add_argument("-tt", "--testf", action="store", help="input test file name")
+parser.add_argument("-o", "--output-name", action="store", type=str, help="output pkl file name")
 args = parser.parse_args()
 
 MAXLEN = 113 # maximum length of a sequence
@@ -191,7 +191,7 @@ D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 
 
 ####################################################
-#             PLOT HISTOGRAM AND ROC               #
+#             FORMAT RESULTS AND SAVE              #
 ####################################################
 
 
@@ -210,32 +210,16 @@ def format_results(test_seqs, wmm):
         y_seq[46:58] = 1
         y_true.append(y_seq)
         
-    return roc_curve(np.concatenate(y_true), np.concatenate(score_D))
+    return y_true, score_D
 
-# test sequences
-test_fpr, test_tpr, test_t = format_results(test_seqs, D)
-test_roc_auc = auc(test_fpr, test_tpr)
+[y_true_test, scores_test] = format_results(test_seqs, D)
+[y_true_train, scores_train] = format_results(seqs, D)
 
-# train sequences
-train_fpr, train_tpr, train_t = format_results(seqs, D)
-train_roc_auc = auc(train_fpr, train_tpr)
 
-# debug test sequences
-#test_fpr, test_tpr, test_t = format_results(test_seqs, D)
-#test_roc_auc = auc(test_fpr, test_tpr)
+with open("output/"+args.output_name+"_train.pkl", "wb") as f:
+    pkl.dump([y_true_train, scores_train], f)
+f.close()
 
-# debug train sequences
-#test_fpr, test_tpr, test_t = format_results(test_seqs, D)
-#test_roc_auc = auc(test_fpr, test_tpr)
-
-plt.figure()
-lw = 2
-plt.plot(test_fpr, test_tpr, color='darkorange', lw=lw)
-plt.plot(train_fpr, train_tpr, color='red', lw=lw)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC curve')
-plt.savefig("output/roc.png")
+with open("output/"+args.output_name+"_test.pkl", "wb") as f:
+    pkl.dump([y_true_test, scores_test], f)
+f.close()
