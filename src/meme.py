@@ -3,12 +3,13 @@ import numpy as np
 from numpy import log2
 import argparse
 from collections import defaultdict
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve, auc
 
 parser = argparse.ArgumentParser()
-#parser.add_argument("--str_input", action="store_true", help = "indicates string inputs for comparison")
-parser.add_argument("--file-input", action="store_true", help="indicates file inputs for comparison")
-parser.add_argument("--trainf", action="store", help="input train file name")
-parser.add_argument("--testf", action="store", help="input test file name")
+parser.add_argument("-tr", "--trainf", action="store", help="input train file name")
+parser.add_argument("-tt", "--testf", action="store", help="input test file name")
 args = parser.parse_args()
 
 MAXLEN = 113 # maximum length of a sequence
@@ -39,13 +40,8 @@ def read_data(filename):
     return d
 
 
-if args.file_input:
-    Dtrain = read_data(args.trainf)
-    Dtest = read_data(args.testf)
-    
-
-#if args.str_input:
-#    None
+Dtrain = read_data(args.trainf)
+Dtest = read_data(args.testf)    
 
 
 
@@ -192,6 +188,33 @@ final_idx = entropies.argmax()
 D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 #print(D)
 
-# scores:
+score_D = []
+y_true = []
+positions = []
+
+# scores based on D
 for x in test_seqs:
-    print(scanWMM(x, D).argmax())
+    scores = scanWMM(x, D)
+    
+    positions.append(scores.argmax())
+    score_D.append(scores)
+    y_seq = np.zeros(len(scores))
+    y_seq[46:58] = 1
+    y_true.append(y_seq)
+    
+
+#print(np.concatenate(score_D))
+#print(np.concatenate(y_true))
+fpr, tpr, t = roc_curve(np.concatenate(y_true), np.concatenate(score_D))
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange', lw=lw)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC curve')
+plt.savefig("output/roc.png")
