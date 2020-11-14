@@ -255,6 +255,7 @@ for freq_matrix, label in zip([ A_freq, B_freq, C_freq, D_freq ], ["A", "B", "C"
 plt.rc('axes', prop_cycle=(cycler('color', ['red', 'darkorange', 'magenta', 'purple'])))
 for motif_scores, y_true, l in zip([A_scores, B_scores, C_scores, D_scores], [A_true, B_true, C_true, D_true], ["A", "B", "C", "D"]):
     fpr, tpr, t = roc_curve(np.concatenate(y_true), np.concatenate(motif_scores))
+    print("auc for motif {}".format(l), auc(fpr, tpr))
     plt.plot(fpr, tpr, label = "motif {}".format(l))
 
 # center line
