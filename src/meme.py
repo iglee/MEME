@@ -6,6 +6,9 @@ from collections import defaultdict, Counter
 #import pickle as pkl
 import matplotlib.pyplot as plt
 import logomaker as lm
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve, auc
+from cycler import cycler
 
 
 
@@ -201,7 +204,7 @@ D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 
 def score_wmms(test_seqs, wmm):
     scores = []
-    #y_true = []
+    y_true = []
     positions = []
 
     # scores based on D
@@ -210,16 +213,16 @@ def score_wmms(test_seqs, wmm):
         
         positions.append(score.argmax())
         scores.append(score)
-        #y_seq = np.zeros(len(scores))
-        #y_seq[46:59] = 1
-        #y_true.append(y_seq)
-    return scores, positions
+        y_seq = np.zeros(len(score))
+        y_seq[46:59] = 1
+        y_true.append(y_seq)
+    return scores, positions, y_true
 
 # score motifs A, B, C, D
-A_scores, A_positions = score_wmms(test_seqs, A)
-B_scores, B_positions = score_wmms(test_seqs, B)
-C_scores, C_positions = score_wmms(test_seqs, C)
-D_scores, D_positions = score_wmms(test_seqs, D)
+A_scores, A_positions, A_true = score_wmms(test_seqs, A)
+B_scores, B_positions, B_true = score_wmms(test_seqs, B)
+C_scores, C_positions, C_true = score_wmms(test_seqs, C)
+D_scores, D_positions, D_true = score_wmms(test_seqs, D)
 
 
 # plot histograms for A, B, C, D
@@ -248,11 +251,23 @@ for freq_matrix, label in zip([ A_freq, B_freq, C_freq, D_freq ], ["A", "B", "C"
     plt.close()
 
 
-#[y_true_test, scores_test] = format_results(test_seqs, D)
-#[y_true_test, scores_test] = format_results(test_seqs, D)
-#[y_true_test, scores_test] = format_results(test_seqs, D)
-#[y_true_test, scores_test] = format_results(test_seqs, D)
-#[y_true_train, scores_train] = format_results(seqs, D)
+# plot ROC curves
+plt.rc('axes', prop_cycle=(cycler('color', ['red', 'darkorange', 'magenta', 'purple'])))
+for motif_scores, y_true, l in zip([A_scores, B_scores, C_scores, D_scores], [A_true, B_true, C_true, D_true], ["A", "B", "C", "D"]):
+    fpr, tpr, t = roc_curve(np.concatenate(y_true), np.concatenate(motif_scores))
+    plt.plot(fpr, tpr, label = "motif {}".format(l))
+
+# center line
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+plt.legend(loc='lower right')
+
+plt.title("ROC curves for Motifs A, B, C, D", fontsize=14)
+plt.xlabel("FPR", fontsize=13)
+plt.ylabel("TPR", fontsize=13)
+plt.savefig("output/roc.png")
+plt.close()
+
+
 
 
 #with open("output/"+args.output_name+"_train.pkl", "wb") as f:
