@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 from numpy import log2
 import argparse
-from collections import defaultdict
-import pickle as pkl
+from collections import defaultdict, Counter
+#import pickle as pkl
+import matplotlib.pyplot as plt
+import logomaker as lm
+
 
 
 parser = argparse.ArgumentParser()
@@ -161,7 +164,8 @@ for t in range(3):
 # get max, mid, med motif_wmms from 3 runs; A, B, C
 entropies = []
 for x,y in zip(motif_wmms, freq_matrices):
-    entropies.append((x*y).sum().sum())
+    entropies.append(entropy(x,y))
+
 
 entropies = np.asarray(entropies)
 idx_sorted = entropies.argsort()[::-1]
@@ -180,7 +184,7 @@ for t in range(7):
 
 entropies = []
 for x,y in zip(motif_wmms, freq_matrices):
-    entropies.append((x*y).sum().sum())
+    entropies.append(entropy(x,y))
 
 entropies = np.asarray(entropies)
 final_idx = entropies.argmax()
@@ -195,31 +199,66 @@ D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 ####################################################
 
 
-def format_results(test_seqs, wmm):
-    score_D = []
-    y_true = []
+def score_wmms(test_seqs, wmm):
+    scores = []
+    #y_true = []
     positions = []
 
     # scores based on D
     for x in test_seqs:
-        scores = scanWMM(x, wmm)
+        score = scanWMM(x, wmm)
         
-        positions.append(scores.argmax())
-        score_D.append(scores)
-        y_seq = np.zeros(len(scores))
-        y_seq[46:58] = 1
-        y_true.append(y_seq)
-        
-    return y_true, score_D
+        positions.append(score.argmax())
+        scores.append(score)
+        #y_seq = np.zeros(len(scores))
+        #y_seq[46:59] = 1
+        #y_true.append(y_seq)
+    return scores, positions
 
-[y_true_test, scores_test] = format_results(test_seqs, D)
-[y_true_train, scores_train] = format_results(seqs, D)
+# score motifs A, B, C, D
+A_scores, A_positions = score_wmms(test_seqs, A)
+B_scores, B_positions = score_wmms(test_seqs, B)
+C_scores, C_positions = score_wmms(test_seqs, C)
+D_scores, D_positions = score_wmms(test_seqs, D)
 
 
-with open("output/"+args.output_name+"_train.pkl", "wb") as f:
-    pkl.dump([y_true_train, scores_train], f)
-f.close()
+# plot histograms for A, B, C, D
+for motif, positions in zip(["A", "B", "C", "D"],[A_positions, B_positions, C_positions, D_positions]):
 
-with open("output/"+args.output_name+"_test.pkl", "wb") as f:
-    pkl.dump([y_true_test, scores_test], f)
-f.close()
+    c = Counter(positions)
+    plt.hist(positions, bins=30, color='#0504aa', alpha=0.7, rwidth=0.85)
+    plt.text(73, 500, "Mode position: {},\n Count: {}".format(c.most_common(1)[0][0],c.most_common(1)[0][1]))
+    plt.xlabel("Starting Positions", fontsize=13)  
+    plt.ylabel("Counts", fontsize=13)
+    plt.xticks(fontsize=12)  
+    plt.yticks(fontsize=12)
+    plt.title("Histogram of Starting Positions, Motif {}".format(motif), fontsize=14)
+    
+    plt.savefig("output/motif_{}_histogram.png".format(motif))
+    plt.close()
+
+
+
+# plot sequence logos with Logomaker
+for freq_matrix, label in zip([ A_freq, B_freq, C_freq, D_freq ], ["A", "B", "C", "D"]):
+    df= pd.DataFrame(freq_matrix.T, columns=['A','C','G','T'])
+    lm.Logo(df)
+    plt.title("Sequence Logo of Frequency Matrix, Motif {}".format(label), fontsize=14)
+    plt.savefig("output/seq_logo_{}.png".format(label))
+    plt.close()
+
+
+#[y_true_test, scores_test] = format_results(test_seqs, D)
+#[y_true_test, scores_test] = format_results(test_seqs, D)
+#[y_true_test, scores_test] = format_results(test_seqs, D)
+#[y_true_test, scores_test] = format_results(test_seqs, D)
+#[y_true_train, scores_train] = format_results(seqs, D)
+
+
+#with open("output/"+args.output_name+"_train.pkl", "wb") as f:
+#    pkl.dump([y_true_train, scores_train], f)
+#f.close()
+
+#with open("output/"+args.output_name+"_test.pkl", "wb") as f:
+#    pkl.dump([y_true_test, scores_test], f)
+#f.close()
