@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from numpy import sqrt
+from numpy import argmax
 from numpy import log2
 import argparse
 from collections import defaultdict, Counter
@@ -17,7 +19,7 @@ f_out = open("output/output.txt", "w")
 parser = argparse.ArgumentParser()
 parser.add_argument("-tr", "--trainf", action="store", help="input train file name")
 parser.add_argument("-tt", "--testf", action="store", help="input test file name")
-parser.add_argument("-o", "--output-name", action="store", type=str, help="output pkl file name")
+
 args = parser.parse_args()
 
 MAXLEN = 113 # maximum length of a sequence
@@ -188,7 +190,7 @@ for t in range(3):
 entropies = np.asarray(entropies)
 idx_sorted = entropies.argsort()[::-1]
 max_idx, mid_idx, min_idx = idx_sorted[0], idx_sorted[len(idx_sorted)//2], idx_sorted[-1]
-print(max_idx, mid_idx, min_idx )
+#print(max_idx, mid_idx, min_idx )
 
 A, A_freq = motif_wmms[max_idx], freq_matrices[max_idx]
 B, B_freq = motif_wmms[mid_idx], freq_matrices[mid_idx]
@@ -212,7 +214,7 @@ for t in range(7):
 
 entropies = np.asarray(entropies)
 final_idx = entropies.argmax()
-print(final_idx)
+#print(final_idx)
 
 D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 #print(D)
@@ -281,12 +283,23 @@ for freq_matrix, label in zip([ A, B, C, D ], ["A", "B", "C", "D"]):
     plt.close()
 
 
-# plot ROC curves
+
+print("\n\nAUC scores\n",file=f_out)
+
+# plot ROC curves and print AUC scores
 plt.rc('axes', prop_cycle=(cycler('color', ['red', 'darkorange', 'magenta', 'purple'])))
 for motif_scores, y_true, l in zip([A_scores, B_scores, C_scores, D_scores], [A_true, B_true, C_true, D_true], ["A", "B", "C", "D"]):
     fpr, tpr, t = roc_curve(np.concatenate(y_true), np.concatenate(motif_scores))
     print("AUC for motif {}: ".format(l), auc(fpr, tpr), file=f_out)
     plt.plot(fpr, tpr, label = "motif {}".format(l))
+
+
+    # locate optimal thresholds by gmeans
+    gmeans = sqrt(tpr * (1-fpr))
+    idx = argmax(gmeans)
+    print('Best Threshold={}, G-Mean={}, FPR={}, TPR={}'.format(t[idx], gmeans[idx], fpr[idx], tpr[idx]), file=f_out)
+    
+
 
 # center line
 plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
@@ -308,4 +321,5 @@ plt.close()
 #with open("output/"+args.output_name+"_test.pkl", "wb") as f:
 #    pkl.dump([y_true_test, scores_test], f)
 #f.close()
+
 f_out.close()
