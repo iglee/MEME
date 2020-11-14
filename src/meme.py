@@ -10,7 +10,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve, auc
 from cycler import cycler
 
+pd.set_option('display.max_columns', None)
 
+f_out = open("output/output.txt", "w")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-tr", "--trainf", action="store", help="input train file name")
@@ -159,20 +161,34 @@ freq_matrices = [makeFrequencyMatrix(x) for x in cnt_matrices_pseudo]
 motif_wmms = [makeWMM(x) for x in freq_matrices]
 init_wmms = motif_wmms.copy()
 
+# initial entropies
+entropy_table = []
+entropies = []
+for x,y in zip(motif_wmms, freq_matrices):
+    entropies.append(entropy(x,y))
+entropy_table.append(entropies)
+
+
 for t in range(3):
     for i in range(len(motif_wmms)):
         Ys = Estep(seqs, motif_wmms[i])
         motif_wmms[i] = Mstep(seqs, Ys)
+        
+    entropies = []
+    for x,y in zip(motif_wmms, freq_matrices):
+        entropies.append(entropy(x,y))
+    entropy_table.append(entropies)
 
 # get max, mid, med motif_wmms from 3 runs; A, B, C
-entropies = []
-for x,y in zip(motif_wmms, freq_matrices):
-    entropies.append(entropy(x,y))
+#entropies = []
+#for x,y in zip(motif_wmms, freq_matrices):
+#    entropies.append(entropy(x,y))
 
 
 entropies = np.asarray(entropies)
 idx_sorted = entropies.argsort()[::-1]
 max_idx, mid_idx, min_idx = idx_sorted[0], idx_sorted[len(idx_sorted)//2], idx_sorted[-1]
+print(max_idx, mid_idx, min_idx )
 
 A, A_freq = motif_wmms[max_idx], freq_matrices[max_idx]
 B, B_freq = motif_wmms[mid_idx], freq_matrices[mid_idx]
@@ -185,20 +201,34 @@ for t in range(7):
         Ys = Estep(seqs, motif_wmms[i])
         motif_wmms[i] = Mstep(seqs, Ys)
 
-entropies = []
-for x,y in zip(motif_wmms, freq_matrices):
-    entropies.append(entropy(x,y))
+    entropies = []
+    for x,y in zip(motif_wmms, freq_matrices):
+        entropies.append(entropy(x,y))
+    entropy_table.append(entropies)
+
+#entropies = []
+#for x,y in zip(motif_wmms, freq_matrices):
+#    entropies.append(entropy(x,y))
 
 entropies = np.asarray(entropies)
 final_idx = entropies.argmax()
+print(final_idx)
 
 D, D_freq = motif_wmms[final_idx], freq_matrices[final_idx]
 #print(D)
 
+print("WMM matrices for 4 chosen motifs\n", file=f_out)
+print("A\n",A, file=f_out)
+print("\nB\n",B, file=f_out)
+print("\nC\n",C, file=f_out)
+print("\nD\n",D, file=f_out)
+
+print("\n\nTable of entropies, columns = 21 WMMs, rows = iterations\n", file=f_out)
+print(pd.DataFrame(entropy_table), file=f_out ) 
 
 
 ####################################################
-#             FORMAT RESULTS AND SAVE              #
+#             FORMAT RESULTS AND PLOT              #
 ####################################################
 
 
@@ -243,7 +273,7 @@ for motif, positions in zip(["A", "B", "C", "D"],[A_positions, B_positions, C_po
 
 
 # plot sequence logos with Logomaker
-for freq_matrix, label in zip([ A_freq, B_freq, C_freq, D_freq ], ["A", "B", "C", "D"]):
+for freq_matrix, label in zip([ A, B, C, D ], ["A", "B", "C", "D"]):
     df= pd.DataFrame(freq_matrix.T, columns=['A','C','G','T'])
     lm.Logo(df)
     plt.title("Sequence Logo of Frequency Matrix, Motif {}".format(label), fontsize=14)
@@ -255,7 +285,7 @@ for freq_matrix, label in zip([ A_freq, B_freq, C_freq, D_freq ], ["A", "B", "C"
 plt.rc('axes', prop_cycle=(cycler('color', ['red', 'darkorange', 'magenta', 'purple'])))
 for motif_scores, y_true, l in zip([A_scores, B_scores, C_scores, D_scores], [A_true, B_true, C_true, D_true], ["A", "B", "C", "D"]):
     fpr, tpr, t = roc_curve(np.concatenate(y_true), np.concatenate(motif_scores))
-    print("auc for motif {}".format(l), auc(fpr, tpr))
+    print("AUC for motif {}: ".format(l), auc(fpr, tpr), file=f_out)
     plt.plot(fpr, tpr, label = "motif {}".format(l))
 
 # center line
@@ -278,3 +308,4 @@ plt.close()
 #with open("output/"+args.output_name+"_test.pkl", "wb") as f:
 #    pkl.dump([y_true_test, scores_test], f)
 #f.close()
+f_out.close()
